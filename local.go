@@ -12,12 +12,12 @@ const (
 )
 
 func getLocalPath() string {
-	user, err := user.Current()
+	usr, err := user.Current()
 	if err != nil {
 		// Application can't continue
 		os.Exit(1)
 	}
-	return user.HomeDir + "/" + FilesDefaultPath
+	return usr.HomeDir + "/" + FilesDefaultPath
 }
 
 func buildLocalPath(source, platform, language string) string {

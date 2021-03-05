@@ -17,12 +17,12 @@ const (
 )
 
 func getDBPath() string {
-	user, err := user.Current()
+	usr, err := user.Current()
 	if err != nil {
 		// Application can't continue
 		os.Exit(1)
 	}
-	return user.HomeDir + "/" + DBDefaultPath
+	return usr.HomeDir + "/" + DBDefaultPath
 }
 
 func buildBucketName(platform, language string) string {
