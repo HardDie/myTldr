@@ -26,8 +26,16 @@ func main() {
 		}
 	}
 
+	// Try to get page from cache
+	page, err := checkCache(getDBPath(), platform, language, command)
+	if err == nil {
+		fmt.Println(GrayString("[cache]"))
+		fmt.Println(output(page))
+		return
+	}
+
 	// Try to find page in official repository
-	page, err := checkRemote(platform, language, command)
+	page, err = checkRemote(platform, language, command)
 	if err == nil {
 		fmt.Println(GrayString("[global]"))
 		fmt.Println(output(page))

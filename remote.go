@@ -34,6 +34,7 @@ func checkRemote(platform, language, name string) (page []string, err error) {
 	if err != nil {
 		log.Fatal(err.Error())
 	}
+	putCache(getDBPath(), platform, language, name, data)
 	page = strings.Split(string(data), "\n")
 	return
 }

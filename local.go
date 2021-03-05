@@ -28,7 +28,7 @@ func buildLocalPath(source, platform, language string) string {
 	return source + "/" + folder + "/" + platform
 }
 
-func checkLocal(source, platform, language string, name string) (page []string, err error) {
+func checkLocal(source, platform, language, name string) (page []string, err error) {
 	fileName := buildLocalPath(source, platform, language) + "/" + name + ".md"
 	data, err := ioutil.ReadFile(fileName)
 	if err != nil {
