@@ -8,7 +8,7 @@ import (
 )
 
 func main() {
-	source, language, global, err := handleFlags()
+	source, platform, language, global, err := handleFlags()
 	if err != nil {
 		return
 	}
@@ -18,18 +18,18 @@ func main() {
 
 	if global == false {
 		// Get page from local folder
-		page, err := checkLocal(source, language, command)
+		page, err := checkLocal(source, platform, language, command)
 		if err == nil {
-			fmt.Println("local")
+			fmt.Println(GrayString("[local]"))
 			fmt.Println(output(page))
 			return
 		}
 	}
 
 	// Try to find page in official repository
-	page, err := checkRemote(language, command)
+	page, err := checkRemote(platform, language, command)
 	if err == nil {
-		fmt.Println("global")
+		fmt.Println(GrayString("[global]"))
 		fmt.Println(output(page))
 		return
 	}
@@ -37,7 +37,7 @@ func main() {
 	fmt.Printf("`%s` documentation is not available. Consider contributing Pull Request to https://github.com/tldr-pages/tldr\n", command)
 }
 
-func handleFlags() (source, language string, global bool, err error) {
+func handleFlags() (source, platform, language string, global bool, err error) {
 	fVersion := flag.Bool("version", false, "show program's version number and exit")
 	fUpdateCache := flag.Bool("update_cache", false, "Update the local cache of pages and exit")
 	fPlatform := flag.String("platform", "linux", "Override the operating system [linux, osx, sunos, windows, common]")
@@ -52,21 +52,19 @@ func handleFlags() (source, language string, global bool, err error) {
 		flag.PrintDefaults()
 	}
 	flag.Parse()
-
 	_ = fUpdateCache
-	_ = fPlatform
-	_ = fList
 
 	switch {
 	case *fVersion:
 		fmt.Println(getVersion())
 		os.Exit(0)
 	case *fList:
-		fmt.Printf("%q\n", printList(*fSource, *fLanguage))
+		fmt.Printf("%q\n", printList(*fSource, *fPlatform, *fLanguage))
 		os.Exit(0)
 	}
 
 	source = *fSource
+	platform = *fPlatform
 	language = *fLanguage
 	global = *fGlobal
 	if len(flag.Args()) != 1 {

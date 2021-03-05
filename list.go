@@ -8,8 +8,8 @@ import (
 	"strings"
 )
 
-func printList(source, language string) (commands []string) {
-	path := buildLocalPath(source, language)
+func printList(source, platform, language string) (commands []string) {
+	path := buildLocalPath(source, platform, language)
 	err := filepath.Walk(path, func(path string, info os.FileInfo, err error) error {
 		if info.IsDir() {
 			return nil

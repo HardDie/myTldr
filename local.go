@@ -20,16 +20,16 @@ func getLocalPath() string {
 	return user.HomeDir + "/" + FilesDefaultPath
 }
 
-func buildLocalPath(source, language string) string {
+func buildLocalPath(source, platform, language string) string {
 	folder := "pages"
 	if language != "en" {
 		folder += "." + language
 	}
-	return source + "/" + folder
+	return source + "/" + folder + "/" + platform
 }
 
-func checkLocal(source, language string, name string) (page []string, err error) {
-	fileName := buildLocalPath(source, language) + "/" + name + ".md"
+func checkLocal(source, platform, language string, name string) (page []string, err error) {
+	fileName := buildLocalPath(source, platform, language) + "/" + name + ".md"
 	data, err := ioutil.ReadFile(fileName)
 	if err != nil {
 		return

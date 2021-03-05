@@ -16,6 +16,7 @@ var (
 	WhiteString     = color.WhiteString
 	GreenString     = color.GreenString
 	RedString       = color.RedString
+	GrayString      = color.New(color.FgWhite, color.Faint).SprintfFunc()
 
 	LeadingSpace = strings.Repeat(" ", LeadingSpaceNum)
 )
