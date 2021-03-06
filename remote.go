@@ -1,8 +1,6 @@
 package main
 
 import (
-	"io/ioutil"
-	"net/http"
 	"strings"
 )
 
@@ -21,20 +19,16 @@ func buildRemotePath(cfg *Config) string {
 func checkRemote(cfg *Config, name string) (page []string, err error) {
 	// Build url to possible tldr page
 	url := buildRemotePath(cfg)
+
 	// Get page from official repository
-	res, err := http.Get(url + "/" + name + ".md")
+	data, err := httpGet(url + "/" + name + ".md")
 	if err != nil {
 		return
 	}
-	// If github response not OK, it means page not exists
-	if res.StatusCode != 200 {
+	if len(data) == 0 {
 		return
 	}
-	// Read page text
-	data, err := ioutil.ReadAll(res.Body)
-	if err != nil {
-		return
-	}
+
 	// Put new page to cache or update old
 	err = putCache(cfg, name, data)
 	if err != nil {
