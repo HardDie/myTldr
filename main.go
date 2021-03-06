@@ -109,7 +109,11 @@ func handleFlags() (cfg *Config, done bool, err error) {
 		done = true
 		return
 	case *fList:
-		fmt.Printf("%q\n", printList(cfg))
+		if cfg.Global {
+			fmt.Printf("%q\n", printGlobalList(cfg))
+		} else {
+			fmt.Printf("%q\n", printLocalList(cfg))
+		}
 		done = true
 		return
 	case *fUpdateCache:

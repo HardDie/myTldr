@@ -125,7 +125,7 @@ func updateCache(cfg *Config) (err error) {
 	return
 }
 
-func printAllCache(source string) {
+func printAllCache(source string) (err error) {
 	db, clean, err := openBoldDB(source)
 	if err != nil {
 		return
@@ -143,7 +143,7 @@ func printAllCache(source string) {
 		return nil
 	})
 	if err != nil {
-		log.Fatal(err)
+		return
 	}
 
 	return
