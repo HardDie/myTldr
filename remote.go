@@ -6,21 +6,21 @@ import (
 	"strings"
 )
 
-var (
+const (
 	RemoteBaseURL = "https://raw.githubusercontent.com/tldr-pages/tldr/master"
 )
 
-func buildRemotePath(platform, language string) string {
+func buildRemotePath(cfg *Config) string {
 	folder := "pages"
-	if language != "en" {
-		folder += "." + language
+	if cfg.Language != "en" {
+		folder += "." + cfg.Language
 	}
-	return RemoteBaseURL + "/" + folder + "/" + platform
+	return RemoteBaseURL + "/" + folder + "/" + cfg.Platform
 }
 
-func checkRemote(platform, language, name, dbSource string) (page []string, err error) {
+func checkRemote(cfg *Config, name string) (page []string, err error) {
 	// Build url to possible tldr page
-	url := buildRemotePath(platform, language)
+	url := buildRemotePath(cfg)
 	// Get page from official repository
 	res, err := http.Get(url + "/" + name + ".md")
 	if err != nil {
@@ -36,7 +36,7 @@ func checkRemote(platform, language, name, dbSource string) (page []string, err 
 		return
 	}
 	// Put new page to cache or update old
-	err = putCache(dbSource, platform, language, name, data)
+	err = putCache(cfg, name, data)
 	if err != nil {
 		return
 	}

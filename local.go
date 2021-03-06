@@ -19,17 +19,17 @@ func getLocalPath() (path string, err error) {
 	return
 }
 
-func buildLocalPath(source, platform, language string) string {
+func buildLocalPath(cfg *Config) string {
 	folder := "pages"
-	if language != "en" {
-		folder += "." + language
+	if cfg.Language != "en" {
+		folder += "." + cfg.Language
 	}
-	return source + "/" + folder + "/" + platform
+	return cfg.Source + "/" + folder + "/" + cfg.Platform
 }
 
-func checkLocal(source, platform, language, name string) (page []string, err error) {
+func checkLocal(cfg *Config, name string) (page []string, err error) {
 	// Build path to the local pages
-	fileName := buildLocalPath(source, platform, language) + "/" + name + ".md"
+	fileName := buildLocalPath(cfg) + "/" + name + ".md"
 	// If page not exist, just return
 	if isFileExists(fileName) {
 		var data []byte

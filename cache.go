@@ -25,12 +25,12 @@ func getDBPath() (path string, err error) {
 	return
 }
 
-func buildBucketName(platform, language string) string {
-	name := platform
-	if language != "en" {
-		name += "." + language
+func buildBucketName(cfg *Config) string {
+	if cfg.Language == "en" {
+		return cfg.Platform
+	} else {
+		return cfg.Platform + "." + cfg.Language
 	}
-	return name
 }
 
 func openBoldDB(source string) (db *bolt.DB, clean func(), err error) {
@@ -55,14 +55,14 @@ func openBoldDB(source string) (db *bolt.DB, clean func(), err error) {
 	return
 }
 
-func checkCache(source, platform, language, name string) (page []string, err error) {
+func checkCache(cfg *Config, name string) (page []string, err error) {
 	// If DB not exist, return
-	if !isFileExists(source) {
+	if !isFileExists(cfg.Source) {
 		return
 	}
 
 	// Open DB
-	db, clean, err := openBoldDB(source)
+	db, clean, err := openBoldDB(cfg.Source)
 	if err != nil {
 		return
 	}
@@ -70,7 +70,7 @@ func checkCache(source, platform, language, name string) (page []string, err err
 
 	var data []byte
 	// Build bucket name from input values
-	bucketName := buildBucketName(platform, language)
+	bucketName := buildBucketName(cfg)
 	err = db.View(func(tx *bolt.Tx) error {
 		// Check if bucket exists
 		b := tx.Bucket([]byte(bucketName))
@@ -85,6 +85,7 @@ func checkCache(source, platform, language, name string) (page []string, err err
 		return nil
 	})
 	if err != nil {
+		err = nil
 		return
 	}
 
@@ -93,14 +94,14 @@ func checkCache(source, platform, language, name string) (page []string, err err
 	return
 }
 
-func putCache(source, platform, language, name string, data []byte) (err error) {
-	db, clean, err := openBoldDB(source)
+func putCache(cfg *Config, name string, data []byte) (err error) {
+	db, clean, err := openBoldDB(cfg.Source)
 	if err != nil {
 		return
 	}
 	defer clean()
 
-	bucketName := buildBucketName(platform, language)
+	bucketName := buildBucketName(cfg)
 	err = db.Update(func(tx *bolt.Tx) error {
 		b, err := tx.CreateBucketIfNotExists([]byte(bucketName))
 		if err != nil {

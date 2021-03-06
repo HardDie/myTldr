@@ -7,9 +7,17 @@ import (
 	"os"
 )
 
+type Config struct {
+	Platform string
+	Source   string
+	DBSource string
+	Language string
+	Global   bool
+}
+
 func main() {
 	// Process flags or print information if required
-	source, platform, language, dbSource, global, done, err := handleFlags()
+	cfg, done, err := handleFlags()
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -21,10 +29,10 @@ func main() {
 	command := flag.Args()[0]
 
 	// If flag not set, first search result in local files
-	if global == false {
+	if cfg.Global == false {
 		// Get page from local folder
 		var page []string
-		page, err = checkLocal(source, platform, language, command)
+		page, err = checkLocal(cfg, command)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -37,7 +45,7 @@ func main() {
 	}
 
 	// Try to get page from cache
-	page, err := checkCache(dbSource, platform, language, command)
+	page, err := checkCache(cfg, command)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -48,7 +56,7 @@ func main() {
 	}
 
 	// Try to find page in official repository
-	page, err = checkRemote(platform, language, command, dbSource)
+	page, err = checkRemote(cfg, command)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -61,7 +69,7 @@ func main() {
 	fmt.Printf("`%s` documentation is not available. Consider contributing Pull Request to https://github.com/tldr-pages/tldr\n", command)
 }
 
-func handleFlags() (source, platform, language, dbSource string, global, done bool, err error) {
+func handleFlags() (cfg *Config, done bool, err error) {
 	localPath, err := getLocalPath()
 	if err != nil {
 		return
@@ -88,22 +96,25 @@ func handleFlags() (source, platform, language, dbSource string, global, done bo
 	flag.Parse()
 	_ = fUpdateCache
 
+	cfg = &Config{
+		Platform: *fPlatform,
+		Source:   *fSource,
+		DBSource: *fDBSource,
+		Language: *fLanguage,
+		Global:   *fGlobal,
+	}
+
 	switch {
 	case *fVersion:
 		fmt.Println(getVersion())
 		done = true
 		return
 	case *fList:
-		fmt.Printf("%q\n", printList(*fSource, *fPlatform, *fLanguage))
+		fmt.Printf("%q\n", printList(cfg))
 		done = true
 		return
 	}
 
-	source = *fSource
-	platform = *fPlatform
-	language = *fLanguage
-	global = *fGlobal
-	dbSource = *fDBSource
 	if len(flag.Args()) != 1 {
 		flag.Usage()
 		done = true

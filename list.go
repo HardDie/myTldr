@@ -7,8 +7,11 @@ import (
 	"strings"
 )
 
-func printList(source, platform, language string) (commands []string) {
-	path := buildLocalPath(source, platform, language)
+func printList(cfg *Config) (commands []string) {
+	path := buildLocalPath(cfg)
+	if !isFileExists(path) {
+		return
+	}
 	_ = filepath.Walk(path, func(path string, info os.FileInfo, err error) error {
 		if info.IsDir() {
 			return nil
