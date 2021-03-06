@@ -16,6 +16,7 @@ type Config struct {
 }
 
 func main() {
+	log.SetFlags(log.Lshortfile)
 	// Process flags or print information if required
 	cfg, done, err := handleFlags()
 	if err != nil {

@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"os"
 	"os/user"
@@ -15,6 +16,7 @@ import (
 const (
 	DBDefaultPath = ".cache/tldr"
 	DBDefaultName = "pages.db"
+	PagesSource   = "https://tldr.sh/assets/tldr.zip"
 )
 
 func getDBPath() (path string, err error) {
@@ -117,9 +119,52 @@ func putCache(cfg *Config, name string, data []byte) (err error) {
 }
 
 func updateCache(cfg *Config) (err error) {
+	// Delete DB if exists
 	if isFileExists(cfg.DBSource + "/" + DBDefaultName) {
 		if err = os.Remove(cfg.DBSource + "/" + DBDefaultName); err != nil {
 			return
+		}
+	}
+
+	// Download archive with all pages
+	zipReader, err := downloadZip(PagesSource)
+	if err != nil {
+		return
+	}
+
+	folder := "pages"
+	if cfg.Language != "en" {
+		folder += "." + cfg.Language
+	}
+	path := folder + "/" + cfg.Platform
+
+	for _, file := range zipReader.File {
+		if strings.HasPrefix(file.Name, path) &&
+			strings.HasSuffix(file.Name, ".md") {
+			var name string
+			{
+				folders := strings.Split(file.Name, "/")
+				names := strings.Split(folders[len(folders)-1], ".")
+				name = names[0]
+			}
+
+			f, err := file.Open()
+			if err != nil {
+				return err
+			}
+
+			var data []byte
+			if data, err = ioutil.ReadAll(f); err != nil {
+				return err
+			}
+
+			if err = putCache(cfg, name, data); err != nil {
+				return err
+			}
+
+			if err = f.Close(); err != nil {
+				return err
+			}
 		}
 	}
 	return
