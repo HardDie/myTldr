@@ -1,9 +1,7 @@
 package main
 
 import (
-	"errors"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"strings"
 )
@@ -20,21 +18,29 @@ func buildRemotePath(platform, language string) string {
 	return RemoteBaseURL + "/" + folder + "/" + platform
 }
 
-func checkRemote(platform, language, name string) (page []string, err error) {
+func checkRemote(platform, language, name, dbSource string) (page []string, err error) {
+	// Build url to possible tldr page
 	url := buildRemotePath(platform, language)
+	// Get page from official repository
 	res, err := http.Get(url + "/" + name + ".md")
 	if err != nil {
 		return
 	}
+	// If github response not OK, it means page not exists
 	if res.StatusCode != 200 {
-		err = errors.New("file not found")
 		return
 	}
+	// Read page text
 	data, err := ioutil.ReadAll(res.Body)
 	if err != nil {
-		log.Fatal(err.Error())
+		return
 	}
-	putCache(getDBPath(), platform, language, name, data)
+	// Put new page to cache or update old
+	err = putCache(dbSource, platform, language, name, data)
+	if err != nil {
+		return
+	}
+	// Split text on lines
 	page = strings.Split(string(data), "\n")
 	return
 }

@@ -16,13 +16,13 @@ const (
 	DBDefaultPath = ".cache/tldr"
 )
 
-func getDBPath() string {
+func getDBPath() (path string, err error) {
 	usr, err := user.Current()
 	if err != nil {
-		// Application can't continue
-		os.Exit(1)
+		return
 	}
-	return usr.HomeDir + "/" + DBDefaultPath
+	path = usr.HomeDir + "/" + DBDefaultPath
+	return
 }
 
 func buildBucketName(platform, language string) string {
@@ -35,9 +35,11 @@ func buildBucketName(platform, language string) string {
 
 func openBoldDB(source string) (db *bolt.DB, clean func(), err error) {
 	// Create folder if not exists
-	err = os.MkdirAll(source, 0777)
-	if err != nil && !os.IsExist(err) {
-		log.Fatal(err)
+	if !isFileExists(source) {
+		err = os.MkdirAll(source, 0777)
+		if err != nil {
+			return
+		}
 	}
 
 	db, err = bolt.Open(source+"/"+"pages.db", 0644, &bolt.Options{Timeout: 1 * time.Second})
@@ -54,6 +56,12 @@ func openBoldDB(source string) (db *bolt.DB, clean func(), err error) {
 }
 
 func checkCache(source, platform, language, name string) (page []string, err error) {
+	// If DB not exist, return
+	if !isFileExists(source) {
+		return
+	}
+
+	// Open DB
 	db, clean, err := openBoldDB(source)
 	if err != nil {
 		return
@@ -61,12 +69,15 @@ func checkCache(source, platform, language, name string) (page []string, err err
 	defer clean()
 
 	var data []byte
+	// Build bucket name from input values
 	bucketName := buildBucketName(platform, language)
 	err = db.View(func(tx *bolt.Tx) error {
+		// Check if bucket exists
 		b := tx.Bucket([]byte(bucketName))
 		if b == nil {
 			return errors.New("Data not exists")
 		}
+		// Check if data exists
 		data = b.Get([]byte(name))
 		if data == nil {
 			return errors.New("Data not exists")
@@ -77,16 +88,12 @@ func checkCache(source, platform, language, name string) (page []string, err err
 		return
 	}
 
-	if len(data) > 0 {
-		page = strings.Split(string(data), "\n")
-		return
-	}
-
-	err = errors.New("file not found")
+	// Split data to lines
+	page = strings.Split(string(data), "\n")
 	return
 }
 
-func putCache(source, platform, language, name string, data []byte) {
+func putCache(source, platform, language, name string, data []byte) (err error) {
 	db, clean, err := openBoldDB(source)
 	if err != nil {
 		return
@@ -102,7 +109,7 @@ func putCache(source, platform, language, name string, data []byte) {
 		return b.Put([]byte(name), data)
 	})
 	if err != nil {
-		log.Fatal(err)
+		return
 	}
 	return
 }

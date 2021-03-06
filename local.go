@@ -2,7 +2,6 @@ package main
 
 import (
 	"io/ioutil"
-	"os"
 	"os/user"
 	"strings"
 )
@@ -11,13 +10,13 @@ const (
 	FilesDefaultPath = ".my_scripts/.tldr"
 )
 
-func getLocalPath() string {
+func getLocalPath() (path string, err error) {
 	usr, err := user.Current()
 	if err != nil {
-		// Application can't continue
-		os.Exit(1)
+		return
 	}
-	return usr.HomeDir + "/" + FilesDefaultPath
+	path = usr.HomeDir + "/" + FilesDefaultPath
+	return
 }
 
 func buildLocalPath(source, platform, language string) string {
@@ -29,11 +28,18 @@ func buildLocalPath(source, platform, language string) string {
 }
 
 func checkLocal(source, platform, language, name string) (page []string, err error) {
+	// Build path to the local pages
 	fileName := buildLocalPath(source, platform, language) + "/" + name + ".md"
-	data, err := ioutil.ReadFile(fileName)
-	if err != nil {
-		return
+	// If page not exist, just return
+	if isFileExists(fileName) {
+		var data []byte
+		// Read page data
+		data, err = ioutil.ReadFile(fileName)
+		if err != nil {
+			return
+		}
+		// Split text to lines
+		page = strings.Split(string(data), "\n")
 	}
-	page = strings.Split(string(data), "\n")
 	return
 }
