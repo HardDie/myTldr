@@ -94,7 +94,6 @@ func handleFlags() (cfg *Config, done bool, err error) {
 		flag.PrintDefaults()
 	}
 	flag.Parse()
-	_ = fUpdateCache
 
 	cfg = &Config{
 		Platform: *fPlatform,
@@ -111,6 +110,13 @@ func handleFlags() (cfg *Config, done bool, err error) {
 		return
 	case *fList:
 		fmt.Printf("%q\n", printList(cfg))
+		done = true
+		return
+	case *fUpdateCache:
+		if err = updateCache(cfg); err != nil {
+			return
+		}
+		fmt.Println("Cache successfully updated")
 		done = true
 		return
 	}

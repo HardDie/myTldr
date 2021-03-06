@@ -14,6 +14,7 @@ import (
 
 const (
 	DBDefaultPath = ".cache/tldr"
+	DBDefaultName = "pages.db"
 )
 
 func getDBPath() (path string, err error) {
@@ -42,7 +43,7 @@ func openBoldDB(source string) (db *bolt.DB, clean func(), err error) {
 		}
 	}
 
-	db, err = bolt.Open(source+"/"+"pages.db", 0644, &bolt.Options{Timeout: 1 * time.Second})
+	db, err = bolt.Open(source+"/"+DBDefaultName, 0644, &bolt.Options{Timeout: 1 * time.Second})
 	if err != nil {
 		return
 	}
@@ -62,7 +63,7 @@ func checkCache(cfg *Config, name string) (page []string, err error) {
 	}
 
 	// Open DB
-	db, clean, err := openBoldDB(cfg.Source)
+	db, clean, err := openBoldDB(cfg.DBSource)
 	if err != nil {
 		return
 	}
@@ -95,7 +96,7 @@ func checkCache(cfg *Config, name string) (page []string, err error) {
 }
 
 func putCache(cfg *Config, name string, data []byte) (err error) {
-	db, clean, err := openBoldDB(cfg.Source)
+	db, clean, err := openBoldDB(cfg.DBSource)
 	if err != nil {
 		return
 	}
@@ -111,6 +112,15 @@ func putCache(cfg *Config, name string, data []byte) (err error) {
 	})
 	if err != nil {
 		return
+	}
+	return
+}
+
+func updateCache(cfg *Config) (err error) {
+	if isFileExists(cfg.DBSource + "/" + DBDefaultName) {
+		if err = os.Remove(cfg.DBSource + "/" + DBDefaultName); err != nil {
+			return
+		}
 	}
 	return
 }
