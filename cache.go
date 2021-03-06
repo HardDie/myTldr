@@ -132,21 +132,24 @@ func updateCache(cfg *Config) (err error) {
 		return
 	}
 
-	folder := "pages"
-	if cfg.Language != "en" {
-		folder += "." + cfg.Language
-	}
-	path := folder + "/" + cfg.Platform
-
 	for _, file := range zipReader.File {
-		if strings.HasPrefix(file.Name, path) &&
-			strings.HasSuffix(file.Name, ".md") {
-			var name string
-			{
-				folders := strings.Split(file.Name, "/")
-				names := strings.Split(folders[len(folders)-1], ".")
-				name = names[0]
+		// If started from "pages" and end with ".md", its page with info file
+		if strings.HasSuffix(file.Name, ".md") && strings.HasPrefix(file.Name, "pages") {
+			// Split by "/" symbol, to get every name separated
+			path := strings.Split(strings.TrimSuffix(file.Name, ".md"), "/")
+
+			// get language
+			language := "en"
+			folders := strings.Split(path[0], ".")
+			if len(folders) == 2 {
+				language = folders[1]
 			}
+
+			// get platform
+			platform := path[1]
+
+			// get command
+			command := path[2]
 
 			f, err := file.Open()
 			if err != nil {
@@ -158,11 +161,13 @@ func updateCache(cfg *Config) (err error) {
 				return err
 			}
 
-			if err = putCache(cfg, name, data); err != nil {
-				return err
+			tmpCfg := &Config{
+				Source:   cfg.Source,
+				DBSource: cfg.DBSource,
+				Platform: platform,
+				Language: language,
 			}
-
-			if err = f.Close(); err != nil {
+			if err = putCache(tmpCfg, command, data); err != nil {
 				return err
 			}
 		}
