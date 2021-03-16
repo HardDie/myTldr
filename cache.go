@@ -6,7 +6,6 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
-	"os/user"
 	"strings"
 	"time"
 
@@ -19,20 +18,15 @@ const (
 	PagesSource   = "https://tldr.sh/assets/tldr.zip"
 )
 
-func getDBPath() (path string, err error) {
-	usr, err := user.Current()
-	if err != nil {
-		return
-	}
-	path = usr.HomeDir + "/" + DBDefaultPath
-	return
+func getDBPath(homeDir string) (path string) {
+	return homeDir + "/" + DBDefaultPath
 }
 
 func buildBucketName(cfg *Config) string {
-	if cfg.Language == "en" {
-		return cfg.Platform
+	if *cfg.Language == "en" {
+		return *cfg.Platform
 	} else {
-		return cfg.Platform + "." + cfg.Language
+		return *cfg.Platform + "." + *cfg.Language
 	}
 }
 
@@ -60,12 +54,12 @@ func openBoldDB(source string) (db *bolt.DB, clean func(), err error) {
 
 func checkCache(cfg *Config, name string) (page []string, err error) {
 	// If DB not exist, return
-	if !isFileExists(cfg.Source) {
+	if !isFileExists(*cfg.Source) {
 		return
 	}
 
 	// Open DB
-	db, clean, err := openBoldDB(cfg.DBSource)
+	db, clean, err := openBoldDB(*cfg.DBSource)
 	if err != nil {
 		return
 	}
@@ -98,7 +92,7 @@ func checkCache(cfg *Config, name string) (page []string, err error) {
 }
 
 func putCache(cfg *Config, name string, data []byte) (err error) {
-	db, clean, err := openBoldDB(cfg.DBSource)
+	db, clean, err := openBoldDB(*cfg.DBSource)
 	if err != nil {
 		return
 	}
@@ -120,8 +114,8 @@ func putCache(cfg *Config, name string, data []byte) (err error) {
 
 func updateCache(cfg *Config) (err error) {
 	// Delete DB if exists
-	if isFileExists(cfg.DBSource + "/" + DBDefaultName) {
-		if err = os.Remove(cfg.DBSource + "/" + DBDefaultName); err != nil {
+	if isFileExists(*cfg.DBSource + "/" + DBDefaultName) {
+		if err = os.Remove(*cfg.DBSource + "/" + DBDefaultName); err != nil {
 			return
 		}
 	}
@@ -164,8 +158,8 @@ func updateCache(cfg *Config) (err error) {
 			tmpCfg := &Config{
 				Source:   cfg.Source,
 				DBSource: cfg.DBSource,
-				Platform: platform,
-				Language: language,
+				Platform: &platform,
+				Language: &language,
 			}
 			if err = putCache(tmpCfg, command, data); err != nil {
 				return err

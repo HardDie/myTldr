@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"os/user"
 )
 
 func isFileExists(path string) (isExist bool) {
@@ -49,5 +50,14 @@ func downloadZip(url string) (zipReader *zip.Reader, err error) {
 	if err != nil {
 		return
 	}
+	return
+}
+
+func getHomeDir() (homeDir string, err error) {
+	usr, err := user.Current()
+	if err != nil {
+		return
+	}
+	homeDir = usr.HomeDir
 	return
 }

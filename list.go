@@ -27,12 +27,12 @@ func printLocalList(cfg *Config) (commands []string) {
 }
 
 func printGlobalList(cfg *Config) (commands []string) {
-	if !isFileExists(cfg.DBSource) {
+	if !isFileExists(*cfg.DBSource) {
 		return
 	}
 
 	// Open DB
-	db, clean, err := openBoldDB(cfg.DBSource)
+	db, clean, err := openBoldDB(*cfg.DBSource)
 	if err != nil {
 		return
 	}

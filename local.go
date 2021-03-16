@@ -2,7 +2,6 @@ package main
 
 import (
 	"io/ioutil"
-	"os/user"
 	"strings"
 )
 
@@ -10,21 +9,16 @@ const (
 	FilesDefaultPath = ".my_scripts/.tldr"
 )
 
-func getLocalPath() (path string, err error) {
-	usr, err := user.Current()
-	if err != nil {
-		return
-	}
-	path = usr.HomeDir + "/" + FilesDefaultPath
-	return
+func getLocalPath(homeDir string) (path string) {
+	return homeDir + "/" + FilesDefaultPath
 }
 
 func buildLocalPath(cfg *Config) string {
 	folder := "pages"
-	if cfg.Language != "en" {
-		folder += "." + cfg.Language
+	if *cfg.Language != "en" {
+		folder += "." + *cfg.Language
 	}
-	return cfg.Source + "/" + folder + "/" + cfg.Platform
+	return *cfg.Source + "/" + folder + "/" + *cfg.Platform
 }
 
 func checkLocal(cfg *Config, name string) (page []string, err error) {

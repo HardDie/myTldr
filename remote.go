@@ -10,10 +10,10 @@ const (
 
 func buildRemotePath(cfg *Config) string {
 	folder := "pages"
-	if cfg.Language != "en" {
-		folder += "." + cfg.Language
+	if *cfg.Language != "en" {
+		folder += "." + *cfg.Language
 	}
-	return RemoteBaseURL + "/" + folder + "/" + cfg.Platform
+	return RemoteBaseURL + "/" + folder + "/" + *cfg.Platform
 }
 
 func checkRemote(cfg *Config, name string) (page []string, err error) {
