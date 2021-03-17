@@ -48,7 +48,14 @@ func main() {
 	// Try to get page from cache
 	page, err := checkCache(cfg, command)
 	if err != nil {
-		log.Fatal(err)
+		switch err {
+		case ErrorDataNotExists:
+		// Do nothing
+		case ErrorCacheNotExists:
+			fmt.Println("Cache is empty, you can download it: " + os.Args[0] + " -update_cache")
+		default:
+			log.Fatal(err)
+		}
 	}
 	if len(page) > 0 {
 		fmt.Println(GrayString("[cache]"))

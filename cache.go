@@ -18,6 +18,11 @@ const (
 	PagesSource   = "https://tldr.sh/assets/tldr.zip"
 )
 
+var (
+	ErrorCacheNotExists = errors.New("cache doesn't exists")
+	ErrorDataNotExists = errors.New("data not exists")
+)
+
 func getDBPath(homeDir string) (path string) {
 	return homeDir + "/" + DBDefaultPath
 }
@@ -55,6 +60,7 @@ func openBoldDB(source string) (db *bolt.DB, clean func(), err error) {
 func checkCache(cfg *Config, name string) (page []string, err error) {
 	// If DB not exist, return
 	if !isFileExists(*cfg.Source) {
+		err = ErrorCacheNotExists
 		return
 	}
 
@@ -72,17 +78,16 @@ func checkCache(cfg *Config, name string) (page []string, err error) {
 		// Check if bucket exists
 		b := tx.Bucket([]byte(bucketName))
 		if b == nil {
-			return errors.New("Data not exists")
+			return ErrorDataNotExists
 		}
 		// Check if data exists
 		data = b.Get([]byte(name))
 		if data == nil {
-			return errors.New("Data not exists")
+			return ErrorDataNotExists
 		}
 		return nil
 	})
 	if err != nil {
-		err = nil
 		return
 	}
 
