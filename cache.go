@@ -2,14 +2,9 @@ package main
 
 import (
 	"errors"
-	"fmt"
 	"io/ioutil"
-	"log"
 	"os"
 	"strings"
-	"time"
-
-	"github.com/boltdb/bolt"
 )
 
 const (
@@ -20,7 +15,6 @@ const (
 
 var (
 	ErrorCacheNotExists = errors.New("cache doesn't exists")
-	ErrorDataNotExists = errors.New("data not exists")
 )
 
 func getDBPath(homeDir string) (path string) {
@@ -35,83 +29,44 @@ func buildBucketName(cfg *Config) string {
 	}
 }
 
-func openBoldDB(source string) (db *bolt.DB, clean func(), err error) {
-	// Create folder if not exists
-	if !isFileExists(source) {
-		err = os.MkdirAll(source, 0777)
-		if err != nil {
-			return
-		}
-	}
-
-	db, err = bolt.Open(source+"/"+DBDefaultName, 0644, &bolt.Options{Timeout: 1 * time.Second})
-	if err != nil {
-		return
-	}
-
-	clean = func() {
-		if err = db.Close(); err != nil {
-			log.Fatal(err)
-		}
-	}
-	return
-}
-
 func checkCache(cfg *Config, name string) (page []string, err error) {
 	// If DB not exist, return
-	if !isFileExists(*cfg.Source) {
+	if !isFileExists(*cfg.DBSource) {
 		err = ErrorCacheNotExists
 		return
 	}
 
-	// Open DB
-	db, clean, err := openBoldDB(*cfg.DBSource)
+	// // Open DB
+	bw, err := NewBoltWrapper(*cfg.DBSource + "/" + DBDefaultName)
 	if err != nil {
 		return
 	}
-	defer clean()
+	defer func() { _ = bw.Close() }()
 
-	var data []byte
 	// Build bucket name from input values
 	bucketName := buildBucketName(cfg)
-	err = db.View(func(tx *bolt.Tx) error {
-		// Check if bucket exists
-		b := tx.Bucket([]byte(bucketName))
-		if b == nil {
-			return ErrorDataNotExists
-		}
-		// Check if data exists
-		data = b.Get([]byte(name))
-		if data == nil {
-			return ErrorDataNotExists
-		}
-		return nil
-	})
+	data, err := bw.GetDataFromBucket(bucketName, name)
 	if err != nil {
 		return
 	}
 
 	// Split data to lines
-	page = strings.Split(string(data), "\n")
+	page = strings.Split(data, "\n")
 	return
 }
 
 func putCache(cfg *Config, name string, data []byte) (err error) {
-	db, clean, err := openBoldDB(*cfg.DBSource)
+	bw, err := NewBoltWrapper(*cfg.DBSource + "/" + DBDefaultName)
 	if err != nil {
 		return
 	}
-	defer clean()
+	defer func() { _ = bw.Close() }()
 
 	bucketName := buildBucketName(cfg)
-	err = db.Update(func(tx *bolt.Tx) error {
-		b, err := tx.CreateBucketIfNotExists([]byte(bucketName))
-		if err != nil {
-			return err
-		}
-		return b.Put([]byte(name), data)
-	})
-	if err != nil {
+	if err = bw.CreateBucketIfNotExists(bucketName); err != nil {
+		return
+	}
+	if err = bw.PutDataToBucket(bucketName, name, data); err != nil {
 		return
 	}
 	return
@@ -171,29 +126,5 @@ func updateCache(cfg *Config) (err error) {
 			}
 		}
 	}
-	return
-}
-
-func printAllCache(source string) (err error) {
-	db, clean, err := openBoldDB(source)
-	if err != nil {
-		return
-	}
-	defer clean()
-
-	err = db.View(func(tx *bolt.Tx) error {
-		_ = tx.ForEach(func(name []byte, b *bolt.Bucket) error {
-			fmt.Println("bucket:", string(name))
-			return b.ForEach(func(k, v []byte) error {
-				fmt.Println("   key:", string(k), "value:", strings.Split(string(v), "\n")[0])
-				return nil
-			})
-		})
-		return nil
-	})
-	if err != nil {
-		return
-	}
-
 	return
 }

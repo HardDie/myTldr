@@ -49,7 +49,7 @@ func main() {
 	page, err := checkCache(cfg, command)
 	if err != nil {
 		switch err {
-		case ErrorDataNotExists:
+		case ErrorInvalidKey:
 		// Do nothing
 		case ErrorCacheNotExists:
 			fmt.Println("Cache is empty, you can download it: " + os.Args[0] + " -update_cache")
@@ -109,7 +109,11 @@ func handleFlags() (cfg *Config, done bool, err error) {
 		return
 	case *fList:
 		if *cfg.Global {
-			fmt.Printf("%q\n", printGlobalList(cfg))
+			commands, err := printGlobalList(cfg)
+			if err != nil {
+				log.Fatal(err)
+			}
+			fmt.Printf("%q\n", commands)
 		} else {
 			fmt.Printf("%q\n", printLocalList(cfg))
 		}

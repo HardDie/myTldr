@@ -1,13 +1,10 @@
 package main
 
 import (
-	"log"
 	"os"
 	"path/filepath"
 	"sort"
 	"strings"
-
-	"github.com/boltdb/bolt"
 )
 
 func printLocalList(cfg *Config) (commands []string) {
@@ -26,33 +23,23 @@ func printLocalList(cfg *Config) (commands []string) {
 	return
 }
 
-func printGlobalList(cfg *Config) (commands []string) {
+func printGlobalList(cfg *Config) (commands []string, err error) {
 	if !isFileExists(*cfg.DBSource) {
 		return
 	}
 
 	// Open DB
-	db, clean, err := openBoldDB(*cfg.DBSource)
+	bw, err := NewBoltWrapper(*cfg.DBSource + "/" + DBDefaultName)
 	if err != nil {
 		return
 	}
-	defer clean()
+	defer func() { _ = bw.Close() }()
 
 	// Build bucket name from input values
 	bucketName := buildBucketName(cfg)
 
-	err = db.View(func(tx *bolt.Tx) error {
-		b := tx.Bucket([]byte(bucketName))
-		if b == nil {
-			return nil
-		}
-		return b.ForEach(func(k, v []byte) error {
-			commands = append(commands, string(k))
-			return nil
-		})
-	})
-	if err != nil {
-		log.Fatal(err)
+	if commands, err = bw.GetKeysFromBucket(bucketName); err != nil {
+		return
 	}
 	return
 }
