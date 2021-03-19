@@ -111,8 +111,10 @@ func updateCache(cfg *Config) (err error) {
 
 			var data []byte
 			if data, err = ioutil.ReadAll(f); err != nil {
+				_ = f.Close()
 				return err
 			}
+			_ = f.Close()
 
 			tmpCfg := &Config{
 				Source:   cfg.Source,
