@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"io/ioutil"
 	"net/http"
+	"net/url"
 	"os"
 	"os/user"
 )
@@ -14,8 +15,13 @@ func isFileExists(path string) (isExist bool) {
 	return !os.IsNotExist(err)
 }
 
-func httpGet(url string) (result []byte, err error) {
-	resp, err := http.Get(url)
+func httpGet(urlString string) (result []byte, err error) {
+	u, err := url.Parse(urlString)
+	if err != nil {
+		return
+	}
+
+	resp, err := http.Get(u.String())
 	if err != nil {
 		return
 	}

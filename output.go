@@ -42,12 +42,13 @@ func output(page []string) (rendered string) {
 			res = re2.ReplaceAllString(res, "}}\n")
 			rendered += LeadingSpace + LeadingSpace
 			for _, item := range strings.Split(res, "\n") {
-				if len(item) == 0 {
+				switch {
+				case len(item) == 0:
 					rendered += " "
-				} else if item[0] == '{' {
+				case item[0] == '{':
 					// If argument, print without color
 					rendered += item[2 : len(item)-2]
-				} else {
+				default:
 					rendered += RedString(item)
 				}
 			}

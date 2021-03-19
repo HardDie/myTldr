@@ -30,7 +30,7 @@ func main() {
 	command := flag.Args()[0]
 
 	// If flag not set, first search result in local files
-	if *cfg.Global == false {
+	if !*cfg.Global {
 		// Get page from local folder
 		var page []string
 		page, err = checkLocal(cfg, command)
@@ -96,7 +96,8 @@ func handleFlags() (cfg *Config, done bool, err error) {
 
 	flag.Usage = func() {
 		fmt.Printf("usage: %s [options] command\n\n", os.Args[0])
-		fmt.Println("Go command line client for tldr\n")
+		fmt.Println("Go command line client for tldr")
+		fmt.Println()
 		fmt.Println("optional arguments:")
 		flag.PrintDefaults()
 	}
@@ -109,9 +110,10 @@ func handleFlags() (cfg *Config, done bool, err error) {
 		return
 	case *fList:
 		if *cfg.Global {
-			commands, err := printGlobalList(cfg)
-			if err != nil {
-				log.Fatal(err)
+			commands, err2 := printGlobalList(cfg)
+			if err2 != nil {
+				err = err2
+				return
 			}
 			fmt.Printf("%q\n", commands)
 		} else {

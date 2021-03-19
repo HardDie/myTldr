@@ -24,9 +24,8 @@ func getDBPath(homeDir string) (path string) {
 func buildBucketName(cfg *Config) string {
 	if *cfg.Language == "en" {
 		return *cfg.Platform
-	} else {
-		return *cfg.Platform + "." + *cfg.Language
 	}
+	return *cfg.Platform + "." + *cfg.Language
 }
 
 func checkCache(cfg *Config, name string) (page []string, err error) {
@@ -126,5 +125,5 @@ func updateCache(cfg *Config) (err error) {
 			}
 		}
 	}
-	return
+	return nil
 }
