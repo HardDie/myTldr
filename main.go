@@ -95,6 +95,8 @@ func handleFlags() (cfg *Config, done bool, err error) {
 	fList := flag.Bool("list", false, "List all available commands for operating system")
 
 	flag.Usage = func() {
+		fmt.Println(getVersion())
+		fmt.Println()
 		fmt.Printf("usage: %s [options] command\n\n", os.Args[0])
 		fmt.Println("Go command line client for tldr")
 		fmt.Println()

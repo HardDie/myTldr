@@ -1,7 +1,7 @@
 package main
 
 var (
-	VERSION = "0.3"
+	VERSION = "0.4"
 )
 
 func getVersion() string {
