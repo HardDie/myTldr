@@ -3,6 +3,7 @@ package main
 import (
 	"archive/zip"
 	"bytes"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -66,4 +67,11 @@ func getHomeDir() (homeDir string, err error) {
 	}
 	homeDir = usr.HomeDir
 	return
+}
+
+func printProgress(current, total int) {
+	fmt.Printf("\r%d / %d", current, total)
+	if current == total {
+		fmt.Println()
+	}
 }

@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"strings"
@@ -89,7 +90,13 @@ func updateCache(cfg *Config) (err error) {
 	}
 	defer func() { _ = bw.Close() }()
 
+	fmt.Println("Start caching...")
+
+	num := 0
 	for _, file := range zipReader.File {
+		num++
+		printProgress(num, len(zipReader.File))
+
 		// If started from "pages" and end with ".md", its page with info file
 		if strings.HasSuffix(file.Name, ".md") && strings.HasPrefix(file.Name, "pages") {
 			// Split by "/" symbol, to get every name separated
