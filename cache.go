@@ -54,13 +54,11 @@ func checkCache(cfg *Config, name string) (page []string, err error) {
 	return
 }
 
-func putCache(cfg *Config, name string, data []byte) (err error) {
-	bw, err := NewBoltWrapper(*cfg.DBSource + "/" + DBDefaultName)
-	if err != nil {
-		return
-	}
-	defer func() { _ = bw.Close() }()
+func openCache(cfg *Config) (bw *BoltWrapper, err error) {
+	return NewBoltWrapper(*cfg.DBSource + "/" + DBDefaultName)
+}
 
+func putCache(cfg *Config, bw *BoltWrapper, name string, data []byte) (err error) {
 	bucketName := buildBucketName(cfg)
 	if err = bw.CreateBucketIfNotExists(bucketName); err != nil {
 		return
@@ -84,6 +82,12 @@ func updateCache(cfg *Config) (err error) {
 	if err != nil {
 		return
 	}
+
+	bw, err := openCache(cfg)
+	if err != nil {
+		return
+	}
+	defer func() { _ = bw.Close() }()
 
 	for _, file := range zipReader.File {
 		// If started from "pages" and end with ".md", its page with info file
@@ -122,7 +126,7 @@ func updateCache(cfg *Config) (err error) {
 				Platform: &platform,
 				Language: &language,
 			}
-			if err = putCache(tmpCfg, command, data); err != nil {
+			if err = putCache(tmpCfg, bw, command, data); err != nil {
 				return err
 			}
 		}

@@ -29,8 +29,14 @@ func checkRemote(cfg *Config, name string) (page []string, err error) {
 		return
 	}
 
+	bw, err := openCache(cfg)
+	if err != nil {
+		return
+	}
+	defer func() { _ = bw.Close() }()
+
 	// Put new page to cache or update old
-	err = putCache(cfg, name, data)
+	err = putCache(cfg, bw, name, data)
 	if err != nil {
 		return
 	}
