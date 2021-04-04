@@ -29,7 +29,7 @@ func httpGet(urlString string) (result []byte, err error) {
 	defer func() { _ = resp.Body.Close() }()
 
 	// If response not OK, it means page not exists
-	if resp.StatusCode != 200 {
+	if resp.StatusCode != http.StatusOK {
 		return
 	}
 
