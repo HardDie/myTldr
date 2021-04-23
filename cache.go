@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"os"
 	"strings"
 )
@@ -139,4 +140,23 @@ func updateCache(cfg *Config) (err error) {
 		}
 	}
 	return nil
+}
+
+func getCacheInfo(cfg *Config) string {
+	cachePath := *cfg.DBSource + "/" + DBDefaultName
+
+	// Check if cache exists
+	if !isFileExists(cachePath) {
+		return "Cache not exists"
+	}
+
+	// Get file stats
+	info, err := os.Stat(cachePath)
+	if err != nil {
+		log.Fatal("Can't get file stats:", err.Error())
+	}
+
+	s := Size(info.Size())
+	date := info.ModTime()
+	return fmt.Sprintf("last update(%d-%s-%02d %02d:%02d) size(%s)", date.Year(), date.Month().String(), date.Day(), date.Hour(), date.Minute(), s)
 }

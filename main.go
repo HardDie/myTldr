@@ -98,6 +98,7 @@ func handleFlags() (cfg *Config, done bool, err error) {
 		fmt.Println(getVersion())
 		fmt.Println()
 		fmt.Printf("usage: %s [options] command\n\n", os.Args[0])
+		fmt.Printf("cache info: %s\n\n", getCacheInfo(cfg))
 		fmt.Println("Go command line client for tldr")
 		fmt.Println()
 		fmt.Println("optional arguments:")
