@@ -23,16 +23,16 @@ func getDBPath(homeDir string) (path string) {
 	return homeDir + "/" + DBDefaultPath
 }
 
-func buildBucketName(cfg *Config) string {
+func buildBucketName(cfg *Config, platform string) string {
 	if *cfg.Language == "en" {
-		return *cfg.Platform
+		return platform
 	}
-	return *cfg.Platform + "." + *cfg.Language
+	return platform + "." + *cfg.Language
 }
 
 func checkCache(cfg *Config, name string) (page []string, err error) {
 	// If DB not exist, return
-	if !isFileExists(*cfg.DBSource) {
+	if !isFileExists(*cfg.DBSource + "/" + DBDefaultName) {
 		err = ErrorCacheNotExists
 		return
 	}
@@ -44,11 +44,22 @@ func checkCache(cfg *Config, name string) (page []string, err error) {
 	}
 	defer func() { _ = bw.Close() }()
 
-	// Build bucket name from input values
-	bucketName := buildBucketName(cfg)
-	data, err := bw.GetDataFromBucket(bucketName, name)
-	if err != nil {
-		return
+	platforms := []string{PlatformCommon, *cfg.Platform}
+
+	// Check file for all platforms
+	var data string
+	for _, platform := range platforms {
+		// Build bucket name from input values
+		bucketName := buildBucketName(cfg, platform)
+		data, err = bw.GetDataFromBucket(bucketName, name)
+		if err == ErrorInvalidKey || err == ErrorCannotFindBucket {
+			// If such data not exists just check next platform
+			continue
+		}
+		if err != nil {
+			return
+		}
+		break
 	}
 
 	// Split data to lines
@@ -61,7 +72,7 @@ func openCache(cfg *Config) (bw *BoltWrapper, err error) {
 }
 
 func putCache(cfg *Config, bw *BoltWrapper, name string, data []byte) (err error) {
-	bucketName := buildBucketName(cfg)
+	bucketName := buildBucketName(cfg, *cfg.Platform)
 	if err = bw.CreateBucketIfNotExists(bucketName); err != nil {
 		return
 	}

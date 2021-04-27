@@ -8,7 +8,7 @@ import (
 )
 
 func printLocalList(cfg *Config) (commands []string) {
-	path := buildLocalPath(cfg)
+	path := buildLocalPath(cfg, *cfg.Platform)
 	if !isFileExists(path) {
 		return
 	}
@@ -36,7 +36,7 @@ func printGlobalList(cfg *Config) (commands []string, err error) {
 	defer func() { _ = bw.Close() }()
 
 	// Build bucket name from input values
-	bucketName := buildBucketName(cfg)
+	bucketName := buildBucketName(cfg, *cfg.Platform)
 
 	if commands, err = bw.GetKeysFromBucket(bucketName); err != nil {
 		return

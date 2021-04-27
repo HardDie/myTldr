@@ -8,22 +8,32 @@ const (
 	RemoteBaseURL = "https://raw.githubusercontent.com/tldr-pages/tldr/master"
 )
 
-func buildRemotePath(cfg *Config) string {
+func buildRemotePath(cfg *Config, platform string) string {
 	folder := "pages"
 	if *cfg.Language != "en" {
 		folder += "." + *cfg.Language
 	}
-	return RemoteBaseURL + "/" + folder + "/" + *cfg.Platform
+	return RemoteBaseURL + "/" + folder + "/" + platform
 }
 
 func checkRemote(cfg *Config, name string) (page []string, err error) {
-	// Build url to possible tldr page
-	url := buildRemotePath(cfg)
+	platforms := []string{PlatformCommon, *cfg.Platform}
 
-	// Get page from official repository
-	data, err := httpGet(url + "/" + name + ".md")
-	if err != nil {
-		return
+	var data []byte
+	for _, platform := range platforms {
+		// Build url to possible tldr page
+		url := buildRemotePath(cfg, platform)
+
+		// Get page from official repository
+		data, err = httpGet(url + "/" + name + ".md")
+		if err == ErrorPageNotExists {
+			// If such page not exists, just check another platform
+			continue
+		}
+		if err != nil {
+			return
+		}
+		break
 	}
 	if len(data) == 0 {
 		return

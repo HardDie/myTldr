@@ -3,12 +3,21 @@ package main
 import (
 	"archive/zip"
 	"bytes"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/url"
 	"os"
 	"os/user"
+)
+
+const (
+	PlatformCommon = "common"
+)
+
+var (
+	ErrorPageNotExists = errors.New("WEB: Page not exists")
 )
 
 func isFileExists(path string) (isExist bool) {
@@ -31,6 +40,7 @@ func httpGet(urlString string) (result []byte, err error) {
 
 	// If response not OK, it means page not exists
 	if resp.StatusCode != http.StatusOK {
+		err = ErrorPageNotExists
 		return
 	}
 
