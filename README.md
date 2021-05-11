@@ -6,3 +6,7 @@ The entire cache is stored in one file ```~/.cache/tldr/pages.db```<br>
 
 # My local pages you can find:
 https://github.com/HardDie/tldrPages
+
+# How to install
+```go get github.com/HardDie/myTldr```
+or download from releases binary package
