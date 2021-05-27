@@ -66,7 +66,12 @@ func main() {
 	// Try to find page in official repository
 	page, err = checkRemote(cfg, command)
 	if err != nil {
-		log.Fatal(err)
+		switch err {
+		case ErrorPageNotExists:
+			// Do nothing
+		default:
+			log.Fatal(err)
+		}
 	}
 	if len(page) > 0 {
 		fmt.Println(GrayString("[global]"))

@@ -62,6 +62,9 @@ func checkCache(cfg *Config, name string) (page []string, err error) {
 		break
 	}
 
+	if err != nil {
+		return
+	}
 	// Split data to lines
 	page = strings.Split(data, "\n")
 	return
