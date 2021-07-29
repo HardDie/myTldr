@@ -1,10 +1,11 @@
 package main
 
 import (
-	"flag"
 	"fmt"
 	"log"
 	"os"
+
+	"github.com/spf13/cobra"
 )
 
 type Config struct {
@@ -16,18 +17,115 @@ type Config struct {
 }
 
 func main() {
-	log.SetFlags(log.Lshortfile)
-	// Process flags or print information if required
-	cfg, done, err := handleFlags()
+	homeDir, err := getHomeDir()
 	if err != nil {
-		log.Fatal(err)
+		return
 	}
-	if done {
+
+	// Default flags
+	rootCmd.Flags().SortFlags = false
+	rootCmd.Flags().BoolP("help", "h", false, "show this help message and exit")
+	rootCmd.Flags().BoolP("version", "v", false, "show program's version number and exit")
+	rootCmd.Flags().BoolP("update_cache", "u", false, "Update the local cache of pages and exit")
+	rootCmd.Flags().StringP("platform", "p", "linux", "Override the operating system [linux, osx, sunos, windows, common]")
+	rootCmd.Flags().BoolP("list", "l", false, "List all available commands for operating system")
+	rootCmd.Flags().StringP("source", "s", getLocalPath(homeDir), "Override the default page source")
+	rootCmd.Flags().StringP("language", "L", "en", "Override the default language")
+
+	// Custom flags
+	rootCmd.Flags().BoolP("global", "g", false, "Force to get info from official repository")
+	rootCmd.Flags().StringP("db_source", "D", getDBPath(homeDir), "Override the default cache db path")
+
+	// Setup
+	cobra.CheckErr(rootCmd.Execute())
+}
+
+var rootCmd = &cobra.Command{
+	Use:   "tldr",
+	Short: "Golang command line client for tldr",
+	Long:  "Golang command line client for tldr",
+	Run:   main_call,
+}
+
+func main_call(cmd *cobra.Command, args []string) {
+	// Print version
+	v, err := cmd.Flags().GetBool("version")
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	if v {
+		fmt.Println(getVersion())
+		return
+	}
+
+	// Build config
+	platform, err := cmd.Flags().GetString("platform")
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	source, err := cmd.Flags().GetString("source")
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	dbSource, err := cmd.Flags().GetString("db_source")
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	language, err := cmd.Flags().GetString("language")
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	global, err := cmd.Flags().GetBool("global")
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	cfg := &Config{
+		Platform: &platform,
+		Source:   &source,
+		DBSource: &dbSource,
+		Language: &language,
+		Global:   &global,
+	}
+
+	// Print list of available commands
+	list, err := cmd.Flags().GetBool("list")
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	if list {
+		if global {
+			commands, err2 := printGlobalList(cfg)
+			if err2 != nil {
+				err = err2
+				return
+			}
+			fmt.Printf("%q\n", commands)
+		} else {
+			fmt.Printf("%q\n", printLocalList(cfg))
+		}
+		return
+	}
+
+	// Update cache
+	update, err := cmd.Flags().GetBool("update_cache")
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	if update {
+		if err = updateCache(cfg); err != nil {
+			return
+		}
+		fmt.Println("Cache successfully updated")
+		return
+	}
+
+	if len(args) != 1 {
+		cmd.Help()
 		return
 	}
 
 	// Get command name
-	command := flag.Args()[0]
+	command := args[0]
 
 	// If flag not set, first search result in local files
 	if !*cfg.Global {
@@ -80,68 +178,4 @@ func main() {
 	}
 
 	fmt.Printf("`%s` documentation is not available. Consider contributing Pull Request to https://github.com/tldr-pages/tldr\n", command)
-}
-
-func handleFlags() (cfg *Config, done bool, err error) {
-	homeDir, err := getHomeDir()
-	if err != nil {
-		return
-	}
-
-	cfg = &Config{
-		Platform: flag.String("platform", "linux", "Override the operating system [linux, osx, sunos, windows, common]"),
-		Source:   flag.String("source", getLocalPath(homeDir), "Override the default page source"),
-		DBSource: flag.String("dbSource", getDBPath(homeDir), "Override the default cache db path"),
-		Language: flag.String("language", "en", "Override the default language"),
-		Global:   flag.Bool("global", false, "Force to get info from official repository"),
-	}
-	fVersion := flag.Bool("version", false, "show program's version number and exit")
-	fUpdateCache := flag.Bool("update_cache", false, "Update the local cache of pages and exit")
-	fList := flag.Bool("list", false, "List all available commands for operating system")
-
-	flag.Usage = func() {
-		fmt.Println(getVersion())
-		fmt.Println()
-		fmt.Printf("usage: %s [options] command\n\n", os.Args[0])
-		fmt.Printf("cache info: %s\n\n", getCacheInfo(cfg))
-		fmt.Println("Go command line client for tldr")
-		fmt.Println()
-		fmt.Println("optional arguments:")
-		flag.PrintDefaults()
-	}
-	flag.Parse()
-
-	switch {
-	case *fVersion:
-		fmt.Println(getVersion())
-		done = true
-		return
-	case *fList:
-		if *cfg.Global {
-			commands, err2 := printGlobalList(cfg)
-			if err2 != nil {
-				err = err2
-				return
-			}
-			fmt.Printf("%q\n", commands)
-		} else {
-			fmt.Printf("%q\n", printLocalList(cfg))
-		}
-		done = true
-		return
-	case *fUpdateCache:
-		if err = updateCache(cfg); err != nil {
-			return
-		}
-		fmt.Println("Cache successfully updated")
-		done = true
-		return
-	}
-
-	if len(flag.Args()) != 1 {
-		flag.Usage()
-		done = true
-		return
-	}
-	return
 }
