@@ -13,7 +13,6 @@ type Config struct {
 	Source   *string
 	DBSource *string
 	Language *string
-	Global   *bool
 }
 
 func main() {
@@ -75,16 +74,16 @@ func main_call(cmd *cobra.Command, args []string) {
 	if err != nil {
 		log.Fatal(err.Error())
 	}
-	global, err := cmd.Flags().GetBool("global")
-	if err != nil {
-		log.Fatal(err.Error())
-	}
 	cfg := &Config{
 		Platform: &platform,
 		Source:   &source,
 		DBSource: &dbSource,
 		Language: &language,
-		Global:   &global,
+	}
+
+	global, err := cmd.Flags().GetBool("global")
+	if err != nil {
+		log.Fatal(err.Error())
 	}
 
 	// Print list of available commands
@@ -128,7 +127,7 @@ func main_call(cmd *cobra.Command, args []string) {
 	command := args[0]
 
 	// If flag not set, first search result in local files
-	if !*cfg.Global {
+	if !global {
 		// Get page from local folder
 		var page []string
 		page, err = checkLocal(cfg, command)
@@ -140,7 +139,6 @@ func main_call(cmd *cobra.Command, args []string) {
 			fmt.Println(output(page))
 			return
 		}
-
 	}
 
 	// Try to get page from cache
