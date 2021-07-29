@@ -1,5 +1,5 @@
 PACKAGE=myTldr
-VERSION=0.7
+VERSION=v0.8.0
 
 linters:
 	golangci-lint run --disable-all \
