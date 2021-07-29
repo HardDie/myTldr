@@ -86,11 +86,20 @@ func putCache(cfg *Config, bw *BoltWrapper, name string, data []byte) (err error
 }
 
 func updateCache(cfg *Config) (err error) {
+	// Check if cache folder exists
+	if !isFileExists(*cfg.DBSource) {
+		if err = os.MkdirAll(*cfg.DBSource, os.ModePerm); err != nil {
+			return
+		}
+		fmt.Printf("Cache folder %s were created!\n", *cfg.DBSource)
+	}
+
 	// Delete DB if exists
 	if isFileExists(*cfg.DBSource + "/" + DBDefaultName) {
 		if err = os.Remove(*cfg.DBSource + "/" + DBDefaultName); err != nil {
 			return
 		}
+		fmt.Printf("Cache file %s were removed!\n", *cfg.DBSource+"/"+DBDefaultName)
 	}
 
 	// Download archive with all pages
@@ -104,6 +113,7 @@ func updateCache(cfg *Config) (err error) {
 		return
 	}
 	defer func() { _ = bw.Close() }()
+	fmt.Printf("Cache file %s were created!\n", *cfg.DBSource+"/"+DBDefaultName)
 
 	fmt.Println("Start caching...")
 
