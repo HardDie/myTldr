@@ -5,7 +5,7 @@ import (
 )
 
 const (
-	RemoteBaseURL = "https://raw.githubusercontent.com/tldr-pages/tldr/master"
+	RemoteBaseURL = "https://raw.githubusercontent.com/tldr-pages/tldr/main"
 )
 
 func buildRemotePath(cfg *Config, platform string) string {
