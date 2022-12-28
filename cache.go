@@ -94,18 +94,20 @@ func updateCache(cfg *Config) (err error) {
 		fmt.Printf("Cache folder %s were created!\n", *cfg.DBSource)
 	}
 
+	// Download archive with all pages
+	fmt.Printf("Starting to download pages from %s...\n", PagesSource)
+	zipReader, err := downloadZip(PagesSource)
+	if err != nil {
+		return
+	}
+	fmt.Println("Pages were downloaded!")
+
 	// Delete DB if exists
 	if isFileExists(*cfg.DBSource + "/" + DBDefaultName) {
 		if err = os.Remove(*cfg.DBSource + "/" + DBDefaultName); err != nil {
 			return
 		}
 		fmt.Printf("Cache file %s were removed!\n", *cfg.DBSource+"/"+DBDefaultName)
-	}
-
-	// Download archive with all pages
-	zipReader, err := downloadZip(PagesSource)
-	if err != nil {
-		return
 	}
 
 	bw, err := openCache(cfg)
