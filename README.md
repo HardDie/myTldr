@@ -8,5 +8,5 @@ The entire cache is stored in one file ```~/.cache/tldr/pages.db```<br>
 https://github.com/HardDie/tldrPages
 
 # How to install
-```go get github.com/HardDie/myTldr```
+```go install github.com/HardDie/myTldr@latest```
 or download from releases binary package
