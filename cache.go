@@ -12,7 +12,7 @@ import (
 const (
 	DBDefaultPath = ".cache/tldr"
 	DBDefaultName = "pages.db"
-	PagesSource   = "https://tldr.sh/assets/tldr.zip"
+	PagesSource   = "https://github.com/tldr-pages/tldr/releases/latest/download/tldr.zip"
 )
 
 var (
